@@ -1,3 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>JARVIS 2.0</title>
+<style>
+:root{--blue:#00b4ff;--glow:rgba(0,180,255,.45);--bg:#02050a;--panel:rgba(0,120,200,.08);--line:rgba(0,180,255,.25);--text:#d8f1ff}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;overflow:hidden}
+body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
+background:radial-gradient(circle at 50% 20%,#06182a 0%,#02050a 60%)}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px}
+h1{font-size:18px;letter-spacing:4px;color:var(--blue);text-shadow:0 0 12px var(--glow)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:#f55}
+.dot.on{background:#3f9;box-shadow:0 0 8px #3f9}
+.glass{background:var(--panel);border:1px solid var(--line);border-radius:16px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+main{flex:1;overflow-y:auto;padding:0 14px 10px}
+.view{display:none}.view.active{display:block}
+.core{position:relative;width:200px;height:200px;margin:8px auto 14px}
+.ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;border-top-color:var(--blue);border-bottom-color:var(--blue);box-shadow:0 0 18px var(--glow)}
+.r1{animation:spin 6s linear infinite}
+.r2{inset:18px;animation:spin 4s linear infinite reverse;border-left-color:var(--blue);border-right-color:transparent}
+.r3{inset:38px;animation:spin 9s linear infinite;border-style:dashed;border-color:var(--line)}
+.orb{position:absolute;inset:62px;border-radius:50%;background:radial-gradient(circle,#bfeaff 0%,var(--blue) 45%,#003a66 100%);box-shadow:0 0 40px var(--blue),0 0 90px var(--glow);animation:pulse 2.4s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{transform:scale(1.12);opacity:.85}}
+.wave{display:flex;gap:4px;justify-content:center;align-items:center;height:40px;margin-bottom:12px}
+.wave i{width:4px;height:6px;border-radius:3px;background:var(--blue);box-shadow:0 0 6px var(--glow);animation:w 1.4s ease-in-out infinite}
+@keyframes w{50%{height:30px}}
+.wave.idle i{animation:none;height:6px;opacity:.5}
+.mic.live{background:rgba(0,180,255,.4);animation:pulse 1.2s ease-in-out infinite}
+select{width:100%;padding:10px;border-radius:10px;background:#000;color:var(--text);border:1px solid var(--line);margin-top:6px;font-size:15px}
+label{font-size:14px;display:block;margin-top:4px}
+#heard{font-size:15px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{padding:12px;font-size:13px}
+.card b{display:block;color:var(--blue);font-size:11px;letter-spacing:2px;margin-bottom:4px}
+.card small{opacity:.7}
+.chat{height:calc(100vh - 290px);min-height:200px;overflow-y:auto;padding:10px;margin-bottom:10px}
+.msg{padding:8px 12px;margin:6px 0;border-radius:12px;max-width:85%;font-size:14px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
+.me{background:rgba(0,180,255,.2);margin-left:auto}
+.ai{background:rgba(255,255,255,.06);border:1px solid var(--line)}
+.row{display:flex;gap:8px}
+input[type=text]{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.5);color:var(--text);font-size:15px;outline:none}
+input[type=text]:focus{border-color:var(--blue);box-shadow:0 0 10px var(--glow)}
+button{padding:12px 16px;border-radius:12px;border:1px solid var(--blue);background:rgba(0,180,255,.15);color:var(--blue);font-size:14px;font-weight:600}
+button:active{background:rgba(0,180,255,.4)}
+.mic{width:90px;height:90px;border-radius:50%;font-size:34px;display:block;margin:14px auto;box-shadow:0 0 20px var(--glow)}
+.task{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;margin:6px 0;font-size:14px}
+.task.done span{text-decoration:line-through;opacity:.5}
+.task button{padding:6px 10px;font-size:12px;margin-left:6px}
+h2{font-size:14px;letter-spacing:2px;color:var(--blue);margin:8px 0 10px}
+p.note{font-size:12px;opacity:.7;margin:8px 0;line-height:1.5}
+nav{display:flex;border-top:1px solid var(--line);background:rgba(0,10,20,.9)}
+nav button{flex:1;border:none;border-radius:0;background:none;padding:12px 2px;font-size:11px;color:#6aa}
+nav button.active{color:var(--blue);text-shadow:0 0 8px var(--glow);background:rgba(0,180,255,.08)}
+input[type=range]{width:100%;accent-color:var(--blue)}
+</style>
+</head>
+<body>
+<header>
+  <h1>JARVIS 2.0</h1>
+  <div style="font-size:12px"><span class="dot" id="dot"></span><span id="net">Checking…</span></div>
+</header>
 
-$('clearall').onclick=()=>{if(con
-firm('Delete ALL saved JARVIS data on this device?')){
+<main>
+  <section class="view active" id="home">
+    <div class="core"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="orb"></div></div>
+    <div class="wave" id="wave"></div>
+    <div class="grid">
+      <div class="card glass"><b>NETWORK</b><span id="s-net">…</span></div>
+      <div class="card glass"><b>AI ENGINE</b>Not connected<br><small>Arrives in Version 3</small></div>
+      <div class="card glass"><b>VOICE</b><span id="s-voice">…</span></div>
+      <div class="card glass"><b>TIME</b><span id="clock">…</span></div>
+    </div>
+  </section>
+
+  <section class="view" id="chat">
+    <div class="chat glass" id="log"></div>
+    <div class="row"><input type="text" id="inp" placeholder="Type a message…" autocomplete="off"><button id="send">Send</button></div>
+  </section>
+
+  <section class="view" id="voice">
+    <h2>VOICE CONTROL</h2>
+    <div class="wave" id="wave2"></div>
+    <button class="mic glass" id="mic">🎤</button>
+    <p class="note" style="text-align:center" id="micnote">Tap the mic and speak.</p>
+    <div class="card glass"><b>I HEARD</b><span id="heard">—</span></div>
+    <div class="row" style="margin:10px 0"><button id="stopspeak" style="flex:1">⏹ Stop speaking</button><button id="test" style="flex:1">🔊 Test voice</button></div>
+    <div class="card glass"><b>LANGUAGE (VOICE INPUT)</b><select id="lang"><option value="te-IN">తెలుగు (Telugu)</option><option value="en-IN">English (India)</option></select></div>
+    <div class="card glass" style="margin-top:10px"><b>CONVERSATION MODE</b><label><input type="checkbox" id="conv"> Listen again after each reply</label></div>
+    <div class="card glass" style="margin-top:10px"><b>VOICE SPEED</b><input type="range" id="speed" min="0.5" max="2" step="0.1" value="1"><small id="speedv">1.0x</small></div>
+    <p class="note">Until Version 3, JARVIS can only say its fixed "no AI connected" message. Voice input and output themselves are real.</p>
+  </section>
+
+  <section class="view" id="memory">
+    <h2>MEMORY</h2>
+    <div class="card glass"><b>SAVED CONVERSATION MESSAGES</b><span id="memcount">0</span><p class="note">Stored only on this phone, in this browser. Nothing is sent anywhere.</p></div>
+    <button id="clearchat" style="margin-top:10px;width:100%">Delete all chat history</button>
+  </section>
+
+  <section class="view" id="tasks">
+    <h2>TASKS</h2>
+    <div class="row"><input type="text" id="tin" placeholder="New task…" autocomplete="off"><button id="tadd">Add</button></div>
+    <div id="tlist" style="margin-top:10px"></div>
+  </section>
+
+  <section class="view" id="settings">
+    <h2>SETTINGS</h2>
+    <div class="card glass"><b>PRIVACY</b>All data stays on this device. No tracking, no hidden data collection.</div>
+    <div class="card glass" style="margin-top:10px"><b>VERSION</b>JARVIS 2.0 — Version 2 (voice)</div>
+    <button id="clearall" style="margin-top:10px;width:100%">Delete ALL saved data</button>
+  </section>
+</main>
+
+<nav id="nav">
+  <button data-v="home" class="active">◉<br>Core</button>
+  <button data-v="chat">💬<br>Chat</button>
+  <button data-v="voice">🎤<br>Voice</button>
+  <button data-v="memory">🧠<br>Memory</button>
+  <button data-v="tasks">✓<br>Tasks</button>
+  <button data-v="settings">⚙<br>Settings</button>
+</nav>
+
+<script>
+const $=id=>document.getElementById(id);
+const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+
+// waveform bars
+['wave','wave2'].forEach(id=>{const w=$(id);w.classList.add('idle');for(let i=0;i<24;i++){const b=document.createElement('i');b.style.animationDelay=(i*0.07)+'s';w.appendChild(b)}});
+
+// navigation
+$('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===b.dataset.v));
+  if(b.dataset.v==='memory')renderMem();
+  if(b.dataset.v!=='voice')stopAll();
+});
+
+// network status
+function net(){const on=navigator.onLine;$('dot').className='dot'+(on?' on':'');$('net').textContent=on?'Online':'Offline';$('s-net').textContent=on?'Online':'Offline'}
+addEventListener('online',net);addEventListener('offline',net);net();
+
+// clock
+function tick(){const d=new Date();$('clock').textContent=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+' · '+d.toLocaleDateString([], {day:'numeric',month:'short'})}
+tick();setInterval(tick,1000);
+
+// chat
+let msgs=load('jv_chat',[]);
+function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
+function renderChat(){const l=$('log');l.innerHTML=msgs.length?'':'<div class="msg ai">Hello. I am JARVIS 2.0. My interface is ready, but no AI engine is connected yet.</div>';
+  msgs.forEach(m=>{l.insertAdjacentHTML('beforeend','<div class="msg '+m.r+'">'+esc(m.t)+'</div>')});l.scrollTop=l.scrollHeight}
+const NOAI='No AI engine is connected yet, so I cannot answer. Real AI is added in Version 3. Your message has been saved on this device.';
+function submit(v){msgs.push({r:'me',t:v});msgs.push({r:'ai',t:NOAI});save('jv_chat',msgs);renderChat();return NOAI}
+function send(){const v=$('inp').value.trim();if(!v)return;$('inp').value='';submit(v)}
+$('send').onclick=send;$('inp').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+renderChat();
+
+// ===== VOICE (Version 2) =====
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const synth=window.speechSynthesis;
+let rec=null,listening=false,voices=[];
+function loadVoices(){if(synth)voices=synth.getVoices()}
+if(synth){loadVoices();synth.onvoiceschanged=loadVoices}
+$('s-voice').textContent=(SR?'Mic ready':'Mic unsupported')+' · '+(synth?'Speaker ready':'No speaker');
+$('lang').value=load('jv_lang','te-IN');
+$('lang').onchange=()=>save('jv_lang',$('lang').value);
+$('conv').checked=load('jv_conv',false);
+$('conv').onchange=()=>save('jv_conv',$('conv').checked);
+$('speed').value=load('jv_speed',1);
+function sp(){$('speedv').textContent=Number($('speed').value).toFixed(1)+'x';save('jv_speed',$('speed').value)}
+$('speed').oninput=sp;sp();
+
+function vstate(t,live){
+  $('micnote').textContent=t;
+  ['wave','wave2'].forEach(id=>$(id).classList.toggle('idle',!live));
+  $('mic').classList.toggle('live',listening);
+}
+function findVoice(lang){
+  const l=lang.toLowerCase(),p=l.slice(0,2);
+  return voices.find(v=>v.lang.replace('_','-').toLowerCase()===l)||voices.find(v=>v.lang.toLowerCase().startsWith(p))||null;
+}
+function speak(text,lang,done){
+  if(!synth){vstate('Text-to-speech is not supported in this browser.',false);return}
+  synth.cancel();
+  const v=findVoice(lang);
+  if(!v&&lang.startsWith('te')){vstate('No Telugu voice found on this phone. Open Android Settings → search "Text-to-speech output" → install the Telugu voice, then try again.',false);return}
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang=lang;u.rate=Number($('speed').value);if(v)u.voice=v;
+  u.onstart=()=>vstate('Speaking…',true);
+  u.onend=()=>{vstate('Ready.',false);if(done)done()};
+  u.onerror=()=>vstate('Ready.',false);
+  synth.speak(u);
+}
+function listen(){
+  if(!SR){vstate('Speech recognition is not supported in this browser. Please use Chrome on Android.',false);return}
+  if(listening)return;
+  if(synth)synth.cancel();
+  rec=new SR();rec.lang=$('lang').value;rec.interimResults=true;rec.continuous=false;
+  let finalText='',err='';
+  rec.onstart=()=>{listening=true;$('heard').textContent='…';vstate('Listening…',true)};
+  rec.onresult=e=>{
+    let t='';
+    for(let i=0;i<e.results.length;i++){t+=e.results[i][0].transcript;if(i===e.results.length-1&&e.results[i].isFinal)finalText=t}
+    $('heard').textContent=t||'…';
+  };
+  rec.onerror=e=>{
+    const m={'not-allowed':'Microphone permission is blocked. Tap the lock icon in the address bar → Permissions → allow Microphone, then try again.',
+      'service-not-allowed':'Microphone permission is blocked. Tap the lock icon in the address bar → Permissions → allow Microphone, then try again.',
+      'no-speech':'I did not hear anything. Tap the mic and try again.',
+      'audio-capture':'No microphone was found.',
+      'network':'Speech recognition needs an internet connection.',
+      'language-not-supported':'This language is not supported for voice input on this phone.'};
+    if(e.error==='aborted')return;
+    err=m[e.error]||('Voice error: '+e.error);
+    vstate(err,false);
+  };
+  rec.onend=()=>{
+    listening=false;
+    if(!err)vstate('Ready.',false);else $('mic').classList.remove('live');
+    const t=finalText.trim();
+    if(t){
+      const reply=submit(t);
+      speak(reply,'en-IN',()=>{if($('conv').checked&&$('voice').classList.contains('active'))listen()});
+    }
+  };
+  try{rec.start()}catch(e){vstate('Could not start the microphone. Try again.',false)}
+}
+function stopAll(){
+  try{if(rec&&listening)rec.abort()}catch(e){}
+  if(synth)synth.cancel();
+  listening=false;vstate('Ready.',false);
+}
+$('mic').onclick=()=>{if(listening){try{rec.stop()}catch(e){}}else listen()};
+$('stopspeak').onclick=()=>{if(synth)synth.cancel();vstate('Stopped.',false)};
+$('test').onclick=()=>{const l=$('lang').value;speak(l.startsWith('te')?'నమస్కారం, నేను జార్విస్':'Hello, I am Jarvis.',l)};
+
+// memory
+function renderMem(){$('memcount').textContent=msgs.length}
+$('clearchat').onclick=()=>{if(confirm('Delete all chat history?')){msgs=[];save('jv_chat',msgs);renderChat();renderMem()}};
+
+// tasks
+let tasks=load('jv_tasks',[]);
+function renderTasks(){const l=$('tlist');l.innerHTML=tasks.length?'':'<p class="note">No tasks yet.</p>';
+  tasks.forEach((t,i)=>{const d=document.createElement('div');d.className='task glass'+(t.d?' done':'');
+    d.innerHTML='<span>'+esc(t.t)+'</span><div><button data-a="t" data-i="'+i+'">'+(t.d?'Undo':'Done')+'</button><button data-a="x" data-i="'+i+'">✕</button></div>';l.appendChild(d)})}
+function addTask(){const v=$('tin').value.trim();if(!v)return;tasks.push({t:v,d:false});$('tin').value='';save('jv_tasks',tasks);renderTasks()}
+$('tadd').onclick=addTask;$('tin').addEventListener('keydown',e=>{if(e.key==='Enter')addTask()});
+$('tlist').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i;
+  if(b.dataset.a==='t')tasks[i].d=!tasks[i].d;else tasks.splice(i,1);save('jv_tasks',tasks);renderTasks()});
+renderTasks();
+
+// settings
+$('clearall').onclick=()=>{if(confirm('Delete ALL saved JARVIS data on this device?')){try{localStorage.clear()}catch(e){}msgs=[];tasks=[];renderChat();renderTasks();renderMem()}};
+</script>
+</body>
+</html>
